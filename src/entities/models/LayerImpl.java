@@ -5,11 +5,10 @@ import entities.interfaces.Layer;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class LayerImpl implements Layer {
     private int[][] dimensions;
-    private Collection<Brick> bricks;
+    private final Collection<Brick> bricks;
 
     public LayerImpl(int rows,int cols) {
         setDimensions(rows,cols);
@@ -17,7 +16,7 @@ public class LayerImpl implements Layer {
     }
 
     private void setDimensions(int rows, int cols) {
-        if (rows >= 100 || cols >= 100){
+        if (rows >= 100 || rows % 2 != 0 || cols >= 100 || cols % 2 != 0) {
             throw new IllegalArgumentException("Invalid layer dimensions!");
         }
         this.dimensions = new int[rows][cols];
@@ -32,11 +31,16 @@ public class LayerImpl implements Layer {
         for (int row = 0; row < this.getLayerData().length; row++) {
             for (int col = 0; col < this.getLayerData()[row].length; col+=2) {
                 leftValue = this.getLayerData()[row][col];
-                rightValue = this.getLayerData()[row][col+1];
-                if (leftValue == rightValue){
-                    left = new int[]{row,col};
-                    right = new int[]{row,col+1};
-                    Brick brick = new BrickImpl(left,right,rightValue);
+                rightValue = this.getLayerData()[row][col + 1];
+                for (Brick brick : this.getBricks()) {
+                    if (brick.getMarkedValue() == leftValue || brick.getMarkedValue() == rightValue) {
+                        throw new IllegalArgumentException("Bricks should contain only 2 blocks");
+                    }
+                }
+                if (leftValue == rightValue) {
+                    left = new int[]{row, col};
+                    right = new int[]{row, col + 1};
+                    Brick brick = new BrickImpl(left, right, rightValue);
                     this.bricks.add(brick);
                 }
             }

@@ -1,9 +1,7 @@
 package core.models;
 
+import core.interfaces.Controller;
 import core.interfaces.Engine;
-import entities.interfaces.Brick;
-import entities.interfaces.Layer;
-import entities.models.LayerImpl;
 import io.interfaces.Reader;
 import io.interfaces.Writer;
 import io.models.InputReader;
@@ -13,33 +11,37 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class EngineImpl implements Engine {
-    private Reader reader;
-    private Writer writer;
+    private final Reader reader;
+    private final Writer writer;
+    private final Controller controller;
 
     public EngineImpl() {
         this.reader = new InputReader();
         this.writer = new OutputWriter();
+        this.controller = new ControllerImpl();
     }
 
     @Override
     public void run() {
-        try {
-            int[] dimensions = Arrays.stream(this.reader.readLine().split(" "))
-                    .mapToInt(Integer::parseInt).toArray();
-            int rows = dimensions[0];
-            int cols = dimensions[1];
-            Layer layer = new LayerImpl(rows,cols);
-            for (int i = 0; i < rows; i++) {
-                layer.fillLayer(i, Arrays.stream(this.reader.readLine()
-                        .split(" ")).mapToInt(Integer::parseInt).toArray());
+        String result;
+        while (true) {
+            try {
+                int[] dimensions = Arrays.stream(this.reader.readLine().split(" "))
+                        .mapToInt(Integer::parseInt).toArray();
+                int rows = dimensions[0];
+                int cols = dimensions[1];
+                controller.createLayer(rows, cols);
+                controller.fillLayer(this.reader);
+                controller.addBricks();
+                controller.createNextLayer();
+                result = controller.result();
+                if (result != null) {
+                    break;
+                }
+            } catch (IOException | IllegalArgumentException exception) {
+                System.out.println(exception.getMessage());
             }
-            layer.addBricks();
-            this.writer.writeLine(layer.toString());
-            for (Brick brick:layer.getBricks()){
-                this.writer.writeLine(brick.getMarkedValue()+" "+ brick.getMarkedValue() );
-            }
-        }catch (IOException | IllegalArgumentException exception){
-            System.out.println(exception.getMessage());
         }
+        this.writer.writeLine(result);
     }
 }
